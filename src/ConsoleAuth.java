@@ -1,48 +1,23 @@
 import java.util.Scanner;
 
 public class ConsoleAuth {
-    private final Storage storage;
-    private final Scanner sc;
+    private Scanner sc = new Scanner(System.in);
 
-    public ConsoleAuth(Storage storage, Scanner sc) {
-        this.storage = storage;
-        this.sc = sc;
-    }
-
-    public User login() {
-        System.out.print("Username: ");
-        String username = sc.nextLine();
-        System.out.print("Password: ");
-        String password = sc.nextLine();
-
-        User user = storage.findUser(username);
-        if (user == null) {
-            System.out.println("User not found!");
-            return null;
-        }
-        if (!user.getPassword().equals(password)) {
-            System.out.println("Incorrect password!");
-            return null;
-        }
-
-        System.out.println("Login successful! Welcome, " + user.getUsername());
-        return user;
-    }
-
-    public void register() {
-        System.out.print("Enter new username: ");
-        String username = sc.nextLine();
-
-        if (storage.findUser(username) != null) {
-            System.out.println("Username already exists!");
-            return;
-        }
-
+    public Admin adminLogin() {
+        System.out.print("Enter admin name: ");
+        String name = sc.nextLine();
         System.out.print("Enter password: ");
-        String password = sc.nextLine();
+        String pass = sc.nextLine();
+        System.out.println("Login successful as ADMIN: " + name);
+        return new Admin(name);
+    }
 
-        User newUser = new User(username, password);
-        storage.addUser(newUser);
-        System.out.println("Registration successful! You can now log in.");
+    public User userLogin() {
+        System.out.print("Enter username: ");
+        String name = sc.nextLine();
+        System.out.print("Enter password: ");
+        String pass = sc.nextLine();
+        System.out.println("Login successful as USER: " + name);
+        return new User(name);
     }
 }

@@ -1,13 +1,11 @@
 public class Admin {
-    private String username;
-    private String password;
+    private String name;
 
-    public Admin(String username, String password) {
-        this.username = username;
-        this.password = password;
+    public Admin(String name) {
+        this.name = name;
     }
 
-    public boolean login(String user, String pass) {
-        return username.equals(user) && password.equals(pass);
+    public String getName() {
+        return name;
     }
 }

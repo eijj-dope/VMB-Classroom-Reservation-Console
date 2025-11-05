@@ -1,31 +1,28 @@
 import java.util.Scanner;
 
 public class ConsoleUI {
-    private final Storage storage;
-    private final ConsoleAuth auth;
-    private final Scanner sc = new Scanner(System.in);
-
-    public ConsoleUI(Storage storage) {
-        this.storage = storage;
-        this.auth = new ConsoleAuth(storage, sc);
-    }
+    private Scanner sc = new Scanner(System.in);
+    private ConsoleAuth auth = new ConsoleAuth();
+    private RoomManager roomManager = new RoomManager();
 
     public void start() {
-        while (true) {
-            System.out.println("\n===== CLASSROOM RESERVATION SYSTEM =====");
-            System.out.println("1. Login as Admin");
-            System.out.println("2. Continue as User");
-            System.out.println("3. Register User");
-            System.out.println("4. Exit");
-            System.out.print("Choose: ");
+        System.out.println("====================================");
+        System.out.println("     CLASSROOM SCHEDULE HEB BUILDING   ");
+        System.out.println("====================================");
 
-            String choice = sc.nextLine();
+        while (true) {
+            System.out.println("\nLogin as:");
+            System.out.println("1. Admin");
+            System.out.println("2. User");
+            System.out.println("3. Exit");
+            System.out.print("Enter choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
             switch (choice) {
-                case "1" -> adminMenu();
-                case "2" -> userMenu();
-                case "3" -> auth.register();
-                case "4" -> {
+                case 1 -> adminMenu(auth.adminLogin());
+                case 2 -> userMenu(auth.userLogin());
+                case 3 -> {
                     System.out.println("Goodbye!");
                     return;
                 }
@@ -34,84 +31,58 @@ public class ConsoleUI {
         }
     }
 
-    private void adminMenu() {
-        System.out.print("\nEnter Admin Username: ");
-        String user = sc.nextLine();
-        System.out.print("Enter Password: ");
-        String pass = sc.nextLine();
+    private void adminMenu(Admin admin) {
+        while (true) {
+            System.out.println("\n=== ADMIN MENU ===");
+            System.out.println("1. View All Rooms");
+            System.out.println("2. View All Reservations");
+            System.out.println("3. Exit to Main Menu");
+            System.out.print("Enter choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        Admin admin = storage.getAdmin();
-        if (admin.login(user, pass)) {
-            while (true) {
-                System.out.println("\n===== ADMIN MENU =====");
-                System.out.println("1. View All Rooms");
-                System.out.println("2. Add New Room");
-                System.out.println("3. View All Reservations");
-                System.out.println("4. Logout");
-                System.out.print("Choose: ");
-                String choice = sc.nextLine();
-
-                switch (choice) {
-                    case "1" -> storage.getRoomManager().viewRooms();
-                    case "2" -> {
-                        System.out.print("Enter new room name: ");
-                        String name = sc.nextLine();
-                        storage.getRoomManager().addRoom(name);
-                        System.out.println("Room added successfully!");
-                    }
-                    case "3" -> storage.getRoomManager().viewAllReservations();
-                    case "4" -> {
-                        System.out.println("Logged out!");
-                        return;
-                    }
-                    default -> System.out.println("Invalid choice!");
-                }
+            switch (choice) {
+                case 1 -> roomManager.viewAllRooms();
+                case 2 -> roomManager.viewAllReservations();
+                case 3 -> { return; }
+                default -> System.out.println("Invalid choice!");
             }
-        } else {
-            System.out.println("Incorrect admin credentials!");
         }
     }
 
-    private void userMenu() {
-        User user = auth.login();
-        if (user == null) return;
-
+    private void userMenu(User user) {
         while (true) {
-            System.out.println("\n===== USER MENU =====");
+            System.out.println("\n=== USER MENU ===");
             System.out.println("1. View Available Rooms");
             System.out.println("2. Reserve a Room");
-            System.out.println("3. Cancel Reservation");
-            System.out.println("4. View My Reservations");
-            System.out.println("5. Logout");
-            System.out.print("Choose: ");
-            String choice = sc.nextLine();
+            System.out.println("3. View My Reservations");
+            System.out.println("4. Cancel Reservation");
+            System.out.println("5. Report Schedule Conflicts");
+            System.out.println("6. Exit to Main Menu");
+            System.out.print("Enter choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-            RoomManager manager = storage.getRoomManager();
             switch (choice) {
-                case "1" -> manager.viewRooms();
-                case "2" -> {
-                    System.out.print("Enter room name to reserve: ");
-                    String roomName = sc.nextLine();
-                    if (manager.reserveRoom(roomName, user.getUsername())) {
-                        System.out.println("Room reserved successfully!");
-                    } else {
-                        System.out.println("Room not available or not found.");
-                    }
+                case 1 -> roomManager.viewAvailableRooms();
+                case 2 -> {
+                    System.out.println("=== ROOM RESERVATION ===");
+                    System.out.print("Enter Room Number (e.g., VMB 101): ");
+                    String roomNum = sc.nextLine();
+                    System.out.print("Enter Start Time (e.g., 7am): ");
+                    String start = sc.nextLine();
+                    System.out.print("Enter End Time (e.g., 10am): ");
+                    String end = sc.nextLine();
+                    roomManager.reserveRoom(roomNum, start, end, user.getName());
                 }
-                case "3" -> {
-                    System.out.print("Enter room name to cancel: ");
-                    String roomName = sc.nextLine();
-                    if (manager.cancelReservation(roomName, user.getUsername())) {
-                        System.out.println("Reservation cancelled!");
-                    } else {
-                        System.out.println("No such reservation found.");
-                    }
+                case 3 -> roomManager.viewUserReservations(user.getName());
+                case 4 -> {
+                    System.out.print("Enter Room Number to Cancel: ");
+                    String room = sc.nextLine();
+                    roomManager.cancelReservation(room, user.getName());
                 }
-                case "4" -> manager.viewUserReservations(user.getUsername());
-                case "5" -> {
-                    System.out.println("Logged out!");
-                    return;
-                }
+                case 5 -> roomManager.reportConflicts();
+                case 6 -> { return; }
                 default -> System.out.println("Invalid choice!");
             }
         }

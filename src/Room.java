@@ -1,39 +1,36 @@
+import java.util.ArrayList;
+
 public class Room {
-    private String name;
-    private boolean isReserved;
-    private String reservedBy;
+    private String roomNumber;
+    private boolean available;
+    private ArrayList<Reservation> reservations = new ArrayList<>();
 
-    public Room(String name) {
-        this.name = name;
-        this.isReserved = false;
-        this.reservedBy = null;
+    public Room(String roomNumber, boolean available) {
+        this.roomNumber = roomNumber;
+        this.available = available;
     }
 
-    public String getName() {
-        return name;
+    public String getRoomNumber() {
+        return roomNumber;
     }
 
-    public boolean isReserved() {
-        return isReserved;
+    public boolean isAvailable() {
+        return available;
     }
 
-    public String getReservedBy() {
-        return reservedBy;
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 
-    public boolean reserve(String userName) {
-        if (isReserved) return false;
-        isReserved = true;
-        reservedBy = userName;
-        return true;
+    public ArrayList<Reservation> getReservations() {
+        return reservations;
     }
 
-    public boolean cancelReservation(String userName) {
-        if (isReserved && reservedBy.equals(userName)) {
-            isReserved = false;
-            reservedBy = null;
-            return true;
-        }
-        return false;
+    public void addReservation(Reservation r) {
+        reservations.add(r);
+    }
+
+    public void removeReservation(String user) {
+        reservations.removeIf(r -> r.getReservedBy().equalsIgnoreCase(user));
     }
 }

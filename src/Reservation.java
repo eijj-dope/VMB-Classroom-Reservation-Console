@@ -1,26 +1,33 @@
-import java.util.Date;
-
 public class Reservation {
-    private String user;
-    private Room room;
-    private Date date;
+    private String roomNumber;
+    private String reservedBy;
+    private String startTime;
+    private String endTime;
 
-    public Reservation(String user, Room room) {
-        this.user = user;
-        this.room = room;
-        this.date = new Date();
+    public Reservation(String roomNumber, String reservedBy, String startTime, String endTime) {
+        this.roomNumber = roomNumber;
+        this.reservedBy = reservedBy;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
-    public String getUser() {
-        return user;
+    public String getRoomNumber() {
+        return roomNumber;
     }
 
-    public Room getRoom() {
-        return room;
+    public String getReservedBy() {
+        return reservedBy;
     }
 
-    @Override
-    public String toString() {
-        return "Room: " + room.getName() + " | Reserved by: " + user + " | Date: " + date;
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public String getTimeRange() {
+        return startTime + " - " + endTime;
     }
 }
