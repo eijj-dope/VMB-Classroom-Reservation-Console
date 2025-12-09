@@ -1,27 +1,17 @@
 import java.util.ArrayList;
 
 public class RoomManager {
-    private ArrayList<Room> rooms = new ArrayList<>();
+    private ArrayList<Room> rooms;
 
-    public RoomManager() {
-        generateRooms();
-    }
-
-    private void generateRooms() {
-        for (int floor = 1; floor <= 5; floor++) {
-            for (int num = 1; num <= 5; num++) {
-                String id = "VMB " + floor + "0" + num;
-                boolean available = (floor != 2); // 2nd floor unavailable
-                rooms.add(new Room(id, available));
-            }
-        }
+    public RoomManager(Storage storage) {
+        this.rooms = storage.getRooms(); // Use shared Storage
     }
 
     public void viewAvailableRooms() {
         System.out.println("\n=== AVAILABLE ROOMS ===");
         for (Room r : rooms) {
-            if (!r.isAvailable()) {
-                System.out.println(r.getRoomNumber() + " - Unavailable");
+            if (!r.isAvailable() || !r.getReservations().isEmpty()) {
+                System.out.println(r.getRoomNumber() + " - UNAVAILABLE");
             } else {
                 System.out.println(r.getRoomNumber());
             }
@@ -30,20 +20,21 @@ public class RoomManager {
 
 
     public void viewAllRooms() {
-        System.out.println("\n=== ROOM LIST ===");
+        System.out.println("\n=== ALL ROOMS ===");
         for (Room r : rooms) {
             if (!r.isAvailable())
                 System.out.println(r.getRoomNumber() + " - UNAVAILABLE (Faculty)");
-            else if (r.getReservations().isEmpty())
-                System.out.println(r.getRoomNumber() + " - AVAILABLE");
-            else {
+            else if (!r.getReservations().isEmpty()) {
                 for (Reservation res : r.getReservations()) {
                     System.out.println(r.getRoomNumber() + " - RESERVED by " +
                             res.getReservedBy() + " (" + res.getTimeRange() + ")");
                 }
+            } else {
+                System.out.println(r.getRoomNumber() + " - AVAILABLE");
             }
         }
     }
+
 
     public void reserveRoom(String roomNum, String start, String end, String user) {
         for (Room r : rooms) {
@@ -53,20 +44,16 @@ public class RoomManager {
                     return;
                 }
 
-                // Check if within 7am–7pm roughly
-                if (!isValidTime(start) || !isValidTime(end)) {
-                    System.out.println("Invalid time! Please enter between 7AM and 7PM.");
-                    return;
-                }
-
+                // Check for time conflicts
                 for (Reservation existing : r.getReservations()) {
                     if (timeOverlap(start, end, existing.getStartTime(), existing.getEndTime())) {
-                        System.out.println("Time conflict with " +
-                                existing.getReservedBy() + " (" + existing.getTimeRange() + ")");
+                        System.out.println("Time conflict with " + existing.getReservedBy() +
+                                " (" + existing.getTimeRange() + ")");
                         return;
                     }
                 }
 
+                // No conflict → reserve the room
                 r.addReservation(new Reservation(roomNum, user, start, end));
                 System.out.println("Room " + roomNum + " reserved by " + user +
                         " (" + start + " - " + end + ")");
@@ -76,9 +63,11 @@ public class RoomManager {
         System.out.println("Room not found.");
     }
 
+
+
     public void viewUserReservations(String user) {
-        System.out.println("\n=== " + user.toUpperCase() + " RESERVATIONS ===");
         boolean found = false;
+        System.out.println("\n=== " + user.toUpperCase() + " RESERVATIONS ===");
         for (Room r : rooms) {
             for (Reservation res : r.getReservations()) {
                 if (res.getReservedBy().equalsIgnoreCase(user)) {
@@ -95,6 +84,12 @@ public class RoomManager {
             if (r.getRoomNumber().equalsIgnoreCase(roomNum)) {
                 int before = r.getReservations().size();
                 r.removeReservation(user);
+
+                // If no reservations remain, mark as available
+                if (r.getReservations().isEmpty() && r.getRoomNumber().startsWith("VMB") && r.getRoomNumber().charAt(4) != '2') {
+                    r.setAvailable(true);
+                }
+
                 if (r.getReservations().size() < before)
                     System.out.println("Reservation canceled for " + roomNum);
                 else
@@ -105,12 +100,14 @@ public class RoomManager {
         System.out.println("Room not found.");
     }
 
+
     public void viewAllReservations() {
-        System.out.println("\n=== ALL ROOM RESERVATIONS ===");
         boolean found = false;
+        System.out.println("\n=== ALL RESERVATIONS ===");
         for (Room r : rooms) {
             for (Reservation res : r.getReservations()) {
-                System.out.println(r.getRoomNumber() + " - " + res.getReservedBy() + " (" + res.getTimeRange() + ")");
+                System.out.println(r.getRoomNumber() + " - " +
+                        res.getReservedBy() + " (" + res.getTimeRange() + ")");
                 found = true;
             }
         }
@@ -123,8 +120,10 @@ public class RoomManager {
         for (Room r : rooms) {
             for (Reservation a : r.getReservations()) {
                 for (Reservation b : r.getReservations()) {
-                    if (a != b && a.getReservedBy().equalsIgnoreCase(b.getReservedBy()) &&
-                            timeOverlap(a.getStartTime(), a.getEndTime(), b.getStartTime(), b.getEndTime())) {
+                    if (a != b &&
+                            a.getReservedBy().equalsIgnoreCase(b.getReservedBy()) &&
+                            (a.getStartTime().equalsIgnoreCase(b.getStartTime()) ||
+                                    a.getEndTime().equalsIgnoreCase(b.getEndTime()))) {
                         System.out.println("Conflict: " + a.getReservedBy() +
                                 " has overlapping reservations in " + r.getRoomNumber());
                         conflict = true;
@@ -135,13 +134,23 @@ public class RoomManager {
         if (!conflict) System.out.println("No conflicts found.");
     }
 
-    private boolean isValidTime(String t) {
-        t = t.toLowerCase();
-        return (t.endsWith("am") || t.endsWith("pm"));
+    private boolean timeOverlap(String start1, String end1, String start2, String end2) {
+        // Convert to integers for 24-hour comparison
+        int s1 = convertTimeToHour(start1);
+        int e1 = convertTimeToHour(end1);
+        int s2 = convertTimeToHour(start2);
+        int e2 = convertTimeToHour(end2);
+
+        return s1 < e2 && s2 < e1; // overlap if times intersect
     }
 
-    private boolean timeOverlap(String s1, String e1, String s2, String e2) {
-        // Simplified overlap check based on text (no actual conversion)
-        return s1.equalsIgnoreCase(s2) || e1.equalsIgnoreCase(e2);
+    // Converts "7am"/"2pm" to integer 24-hour value
+    private int convertTimeToHour(String t) {
+        t = t.toLowerCase().trim();
+        int hour = Integer.parseInt(t.replaceAll("[^0-9]", ""));
+        if (t.endsWith("pm") && hour != 12) hour += 12;
+        if (t.endsWith("am") && hour == 12) hour = 0;
+        return hour;
     }
+
 }

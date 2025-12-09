@@ -1,11 +1,12 @@
 public class Admin {
-    private String name;
+    private final String fixedUsername = "russel";
+    private final String fixedPassword = "admin123";
 
-    public Admin(String name) {
-        this.name = name;
+    public boolean login(String username, String password) {
+        return username.equals(fixedUsername) && password.equals(fixedPassword);
     }
 
-    public String getName() {
-        return name;
+    public String getFixedUsername() {
+        return fixedUsername;
     }
 }

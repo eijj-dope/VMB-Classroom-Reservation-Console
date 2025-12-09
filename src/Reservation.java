@@ -11,23 +11,9 @@ public class Reservation {
         this.endTime = endTime;
     }
 
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public String getReservedBy() {
-        return reservedBy;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public String getTimeRange() {
-        return startTime + " - " + endTime;
-    }
+    public String getRoomNumber() { return roomNumber; }
+    public String getReservedBy() { return reservedBy; }
+    public String getStartTime() { return startTime; }
+    public String getEndTime() { return endTime; }
+    public String getTimeRange() { return startTime + " - " + endTime; }
 }
